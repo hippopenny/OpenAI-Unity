@@ -111,8 +111,8 @@ namespace OpenAI
                 request.method = method;
                 request.SetHeaders(Configuration, ContentType.ApplicationJson);
                 
-                var asyncOperation = request.SendWebRequest();
-
+                request.SendWebRequest();
+                bool isDone = false;
                 do
                 {
                     List<T> dataList = new List<T>();
@@ -124,7 +124,7 @@ namespace OpenAI
                         
                         if (value.Contains("stop")) 
                         {
-                            onComplete?.Invoke();
+                            isdone = true;
                             break;
                         }
                         
@@ -144,7 +144,7 @@ namespace OpenAI
                     
                     await Task.Yield();
                 }
-                while (!asyncOperation.isDone && !token.IsCancellationRequested);
+                while (!isDone);
                 
                 onComplete?.Invoke();
             }
