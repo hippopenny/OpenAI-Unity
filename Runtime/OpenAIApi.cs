@@ -124,7 +124,7 @@ namespace OpenAI
                         
                         if (value.Contains("stop")) 
                         {
-                            isdone = true;
+                            isDone = true;
                             break;
                         }
                         
