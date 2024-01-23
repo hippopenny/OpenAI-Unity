@@ -122,7 +122,7 @@ namespace OpenAI
                     {
                         var value = line.Replace("data: ", "");
                         
-                        if (value.Contains("[DONE]")) 
+                        if (value.Contains("stop")) 
                         {
                             onComplete?.Invoke();
                             break;
