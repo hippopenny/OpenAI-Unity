@@ -1,5 +1,5 @@
 {
-  "name": "com.srcnalt.openai-unity",
+  "name": "com.hippopenny.openai-unity",
   "version": "0.2.0",
   "displayName": "OpenAI Unity",
   "description": "An unofficial OpenAI Unity package that aims to help you use OpenAI API directly in Unity game engine.",
