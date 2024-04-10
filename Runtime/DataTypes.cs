@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using JsonConverters;
 using Newtonsoft.Json;
 
 namespace OpenAI
@@ -94,9 +96,11 @@ namespace OpenAI
         public int? MaxTokens { get; set; }
         public float? PresencePenalty { get; set; } = 0;
         public float? FrequencyPenalty { get; set; } = 0;
-        public Dictionary<string, string> LogitBias { get; set; }
+        public Dictionary<string, float> LogitBias { get; set; }
         public string User { get; set; }
         public string SystemFingerprint { get; set; }
+        public List<ChatFunction> Tools { get; set; }
+        public ToolChoice ToolChoice { get; set; }
     }
 
     public struct CreateChatCompletionResponse : IResponse
@@ -121,10 +125,88 @@ namespace OpenAI
         public string Logprobs { get; set; }
     }
 
-    public struct ChatMessage
+    public struct ToolChoice
     {
+        public string Type { get; set; }
+        public Function Function { get; set; } 
+    }
+
+    public struct Function
+    {
+        public string Name { get; set; }
+    }
+    
+    [Serializable]
+    public record ChatMessage
+    {
+        public ChatMessage(string content, string role)
+        {
+            ToolCalls = default;
+            Role = role;
+            Content = content;
+        }
+
+        public ChatMessage()
+        {
+            
+        }
+
         public string Role { get; set; }
         public string Content { get; set; }
+
+        public string Name { get; set; }
+        public List<FunctionResult> ToolCalls { get; set; }
+
+        public string ToolCallId { get; set; }
+    }
+    
+    [JsonConverter(typeof(PropertyJsonConverter))]
+    public record FunctionProperties
+    {
+        public FunctionProperties()
+        {
+        }
+        
+        public Type Type { get; set; }
+        
+        public string Name { get; set; }
+        
+        public bool IsOptinal { get; set; } = true;
+
+        public string Description { get; set; }
+    }
+    
+    [JsonConverter(typeof(ChatFunctionJsonConverter))]
+    public record ChatFunction
+    { 
+        public ChatFunction() 
+        {
+        }
+
+        public string Name { get; set; } = null!;
+
+        public string? Description { get; set; }
+    
+        public Dictionary<string,FunctionProperties> Parameters { get; set; }
+            
+        public string Type { get; set; }
+
+        public Delegate? Callback { get; set; }
+    }
+
+    [Serializable]
+    [JsonConverter(typeof(FunctionResultJsonConverter))]
+    public record FunctionResult
+    {
+        public FunctionResult() { }
+        
+        public string? ToolCallId { get; set; }
+
+        public string Name { get; set; } = null!;
+
+        public string Arguments { get; set; } = null!;
+        
+        public string Value { get; set; }
     }
     
     #endregion

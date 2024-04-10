@@ -122,13 +122,22 @@ namespace OpenAI
                     {
                         var value = line.Replace("data: ", "");
                         
-                        if (value.Contains("stop")) 
+                        if (value.Contains("[DONE]")) 
                         {
                             isDone = true;
                             break;
                         }
-                        
-                        var data = JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings);
+                        //Debug.Log(value);
+                        T data = default;
+                        try
+                        {
+                            data = JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.Log(value);
+                            continue;
+                        }
 
                         if (data?.Error != null)
                         {
@@ -194,6 +203,7 @@ namespace OpenAI
         private byte[] CreatePayload<T>(T request)
         {
             var json = JsonConvert.SerializeObject(request, jsonSerializerSettings);
+            Debug.LogWarning(json);
             return Encoding.UTF8.GetBytes(json);
         }
 
