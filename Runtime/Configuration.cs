@@ -24,12 +24,9 @@ namespace OpenAI
         {
             if (apiKey == null)
             {
-                var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var authPath = $"{userPath}/.openai/auth.json";
-
-                if (File.Exists(authPath))
+                var json = Resources.Load<TextAsset>("auth").text;
+                if (json != null)
                 {
-                    var json = File.ReadAllText(authPath);
                     Auth = JsonConvert.DeserializeObject<Auth>(json, jsonSerializerSettings);
                 }
                 else
