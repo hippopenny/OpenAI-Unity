@@ -110,14 +110,12 @@ namespace OpenAI
             {
                 request.method = method;
                 request.SetHeaders(Configuration, ContentType.ApplicationJson);
-                
                 request.SendWebRequest();
                 bool isDone = false;
                 do
                 {
                     List<T> dataList = new List<T>();
                     string[] lines = request.downloadHandler.text.Split('\n').Where(line => line != "").ToArray();
-
                     foreach (string line in lines)
                     {
                         var value = line.Replace("data: ", "");
@@ -127,7 +125,6 @@ namespace OpenAI
                             isDone = true;
                             break;
                         }
-                        //Debug.Log(value);
                         T data = default;
                         try
                         {

@@ -100,7 +100,7 @@ namespace OpenAI
         public string User { get; set; }
         public string SystemFingerprint { get; set; }
         public List<ChatFunction> Tools { get; set; }
-        public ToolChoice ToolChoice { get; set; }
+        public ToolChoice? ToolChoice { get; set; }
     }
 
     public struct CreateChatCompletionResponse : IResponse

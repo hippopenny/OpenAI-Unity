@@ -17,6 +17,10 @@ namespace OpenAI
             CancellationToken cancellationToken = default)
         {
             if (arguments != null) _arguments = JsonConvert.DeserializeObject<Dictionary<string, object>>(arguments);
+            else
+            {
+                Debug.LogError("Arguments are null");
+            }
             List<object> Argument = new List<object>();
             foreach (var pair in _arguments)
             {
@@ -47,7 +51,7 @@ namespace OpenAI
             object result = null;
             if (type.IsEnum)
             {
-                if (!Enum.TryParse(type, (string)value, true, out value))
+                if (!Enum.TryParse(type, (string)value, true, out result))
                 {
                     result = JsonConvert.SerializeObject(new
                         { Error = $"Value '{value}' is not a valid enum member for parameter '{type}'." });
