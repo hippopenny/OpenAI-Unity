@@ -8,25 +8,10 @@ namespace JsonConverters
 {
     public class FunctionResultJsonConverter: JsonConverter
     {
-        //TODO - Function Result to JSON
+        
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is FunctionResult function)
-            {
-                var jObject = new JObject
-                {
-                    {"arguments", function.Arguments },
-                    {"name",function.Name},
-                };
-                var jObject2 = new JObject
-                {
-                    { "type", "function" },
-                };
-                jObject2.Add("function",jObject);
-                jObject2.Add("index",0);
-                jObject2.Add("id",function.ToolCallId);
-                jObject2.WriteTo(writer);
-            }
+            throw new NotImplementedException();
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)

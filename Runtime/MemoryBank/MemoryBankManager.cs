@@ -11,18 +11,6 @@ namespace OpenAI.MemoryBank
         private string userName = "";
         private Dictionary<string, List<string>> _memoryBank;
         
-        public Dictionary<string, List<string>> CurrentMemoryBank
-        {
-            get
-            {
-                return _memoryBank;
-            }
-            private set
-            {
-                _memoryBank = value;
-            }
-        }
-        
         public static MemoryBankManager Instance;
 
         private void Awake()
@@ -32,18 +20,18 @@ namespace OpenAI.MemoryBank
 
         public void SwitchMemoryBank(Dictionary<string,List<string>> memory)
         {
-            CurrentMemoryBank = memory;
+            _memoryBank = memory;
         }
 
         public void UpdateMemoryBank(string index, string thought)
         {
-            if(!CurrentMemoryBank.ContainsKey(index)) CurrentMemoryBank.Add(index,new List<string>{thought});
-            else CurrentMemoryBank[index].Add(thought);
+            if(!_memoryBank.ContainsKey(index)) _memoryBank.Add(index,new List<string>{thought});
+            else if(!_memoryBank[index].Contains(thought)) _memoryBank[index].Add(thought);
         }
 
-        public List<string> RetrieveFromMemoryBank(string index)
+        public bool TryRetrieveFromMemoryBank(string index,out List<string> output)
         {
-            return CurrentMemoryBank[index];
+            return _memoryBank.TryGetValue(index, out output);
         }
 
         private Dictionary<string, Dictionary<string,string>> LoadData(string filePath)
@@ -62,13 +50,9 @@ namespace OpenAI.MemoryBank
 
         public void SaveToDisk(string username)
         {
-            //TODO - Save current memory to disk
-        }
-
-        public string GetBeginningMessage()
-        {
-            //TODO - Create a begin message 
-            return null;
+            string fileName = Application.dataPath + $"/Resources/MemoryBank/{username}.json";
+            string jsonString = JsonConvert.SerializeObject(_memoryBank);
+            File.WriteAllText(fileName,jsonString);
         }
     }
 }

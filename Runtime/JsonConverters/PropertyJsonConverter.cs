@@ -11,13 +11,30 @@ namespace JsonConverters
 {
     public class PropertyJsonConverter: JsonConverter
     {
-        private const string Default = "Default";
-        
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             if (value is FunctionProperties properties)
             {
-                JObject o = SerializeType(properties.Type,properties.Description);
+                JObject o = new JObject();
+                var (typeName, typeDescription) = GetTypeInfo(properties.Type);
+                o?.AddFirst(new JProperty("type", typeName));
+                if (typeDescription != null)
+                {
+                    o?.Add(new JProperty("description",typeDescription));
+                } else
+                {
+                    o?.Add(new JProperty("description",properties.Description));
+                }
+
+                if (properties.Type.IsEnum)
+                {
+                    var membersArray = new JArray();
+                    foreach (var enumMember in Enum.GetNames(properties.Type))
+                    {
+                        membersArray.Add(enumMember);
+                    }
+                    o?.Add("enum", membersArray); 
+                } 
                 o.WriteTo(writer);
             }
         }
@@ -30,54 +47,6 @@ namespace JsonConverters
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(FunctionProperties);
-        }
-
-        //TODO - Refactor add description to parameter
-        private JObject SerializeType(Type propertyTyper, string description)
-        {
-            JObject result = new JObject();
-            var (typeName, typeDescription) = GetTypeInfo(propertyTyper);
-            result?.AddFirst(new JProperty("type", typeName));
-            if (typeDescription != null)
-            {
-                result?.Add("description",typeDescription);
-            } else if (description != null)
-            {
-                result?.Add("description", description);
-            }
-            else result?.Add("description", Default);
-            
-            if (propertyTyper.IsEnum)
-            {
-                var membersArray = new JArray();
-                foreach (var enumMember in Enum.GetNames(propertyTyper))
-                {
-                    membersArray.Add(enumMember);
-                }
-                result.Add("enum", membersArray); 
-            } else if (propertyTyper.IsArray && propertyTyper.HasElementType)
-            {
-                var itemType = propertyTyper.GetElementType()!;
-                result.Add("items", SerializeType(itemType,null));
-            } else if(typeof(IEnumerable).IsAssignableFrom(propertyTyper) && propertyTyper.GenericTypeArguments.Length == 1)
-            {
-                var itemType = propertyTyper.GenericTypeArguments[0];
-                result.Add("items", SerializeType(itemType,null));
-            }
-            else if (propertyTyper.IsClass)
-            {
-                var properties = propertyTyper.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite);
-                if (properties.Any())
-                {
-                    var propertiesObject = new JObject();
-                    foreach (var property in properties)
-                    {
-                        propertiesObject.Add(property.Name, SerializeType(property.PropertyType,null));
-                    }
-                    result.Add("properties", propertiesObject);
-                }
-            }
-            return result;
         }
         
         private (string name, string? description) GetTypeInfo(Type type)
