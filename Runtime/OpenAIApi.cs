@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 using System.Text;
 using Newtonsoft.Json;
@@ -10,7 +9,6 @@ using UnityEngine.Networking;
 using System.Collections.Generic;
 using Newtonsoft.Json.Serialization;
 using System.Linq;
-using JsonConverters;
 
 namespace OpenAI
 {
@@ -57,16 +55,17 @@ namespace OpenAI
             },
             Culture = CultureInfo.InvariantCulture
         };
-        
+
         /// <summary>
         ///     Dispatches an HTTP request to the specified path with the specified method and optional payload.
         /// </summary>
         /// <param name="path">The path to send the request to.</param>
         /// <param name="method">The HTTP method to use for the request.</param>
+        /// <param name="onComplete"></param>
         /// <param name="payload">An optional byte array of json payload to include in the request.</param>
         /// <typeparam name="T">Response type of the request.</typeparam>
         /// <returns>A Task containing the response from the request as the specified type.</returns>
-        private async Task<T> DispatchRequest<T>(string path, string method, byte[] payload = null) where T: IResponse
+        private async void DispatchRequest<T>(string path, string method, Action<T> onComplete, byte[] payload = null) where T: IResponse
         {
             T data;
             
@@ -79,21 +78,22 @@ namespace OpenAI
 
                 while (!asyncOperation.isDone) await Task.Yield() ;
                 
+                Debug.LogWarning(request.downloadHandler.text);
+                
                 data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
-            }
-            
-            if (data?.Error != null)
-            {
-                ApiError error = data.Error;
-                Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
-            }
+                
+                if (data?.Error != null)
+                {
+                    ApiError error = data.Error;
+                    Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
+                }
 
-            if (data?.Warning != null)
-            {
-                Debug.LogWarning(data.Warning);
+                if (data?.Warning != null)
+                {
+                    Debug.LogWarning(data.Warning);
+                }
+                onComplete?.Invoke(data);
             }
-            
-            return data;
         }
         
         /// <summary>
@@ -105,7 +105,7 @@ namespace OpenAI
         /// <param name="onComplete">A callback function to be called when the request is complete.</param>
         /// <param name="token">A cancellation token to cancel the request.</param>
         /// <param name="payload">An optional byte array of json payload to include in the request.</param>
-        private async void DispatchRequest<T>(string path, string method, Action<List<T>> onResponse, Action onComplete, CancellationTokenSource token, byte[] payload = null) where T: IResponse
+        private async void DispatchRequest<T>(string path, string method, Action<List<T>> onResponse, Action onComplete, CancellationTokenSource token, byte[] payload = null) where T: IResponse, new()
         {
             using (var request = UnityWebRequest.Put(path, payload))
             {
@@ -125,7 +125,16 @@ namespace OpenAI
                             isDone = true;
                             break;
                         }
-                        var data = JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings);
+                        Debug.Log(value);
+                        var data = new T();
+                        try
+                        {
+                            data = JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings);
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.Log(value);
+                        }
                         if (data?.Error != null)
                         {
                             ApiError error = data.Error;
@@ -139,7 +148,7 @@ namespace OpenAI
                     onResponse?.Invoke(dataList);
                     
                     await Task.Yield();
-                    
+
                 }
                 while (!isDone);
                 
@@ -165,12 +174,12 @@ namespace OpenAI
         /// </summary>
         /// <param name="request">See <see cref="CreateChatCompletionRequest"/></param>
         /// <returns>See <see cref="CreateChatCompletionResponse"/></returns>
-        public async Task<CreateChatCompletionResponse> CreateChatCompletion(CreateChatCompletionRequest request)
+        public void CreateChatCompletion(CreateChatCompletionRequest request, Action<CreateChatCompletionResponse> onComplete)
         {
             var path = $"{BASE_PATH}/chat/completions";
             var payload = CreatePayload(request);
             
-            return await DispatchRequest<CreateChatCompletionResponse>(path, UnityWebRequest.kHttpVerbPOST, payload);
+            DispatchRequest(path, UnityWebRequest.kHttpVerbPOST,onComplete, payload);
         }
         
         /// <summary>

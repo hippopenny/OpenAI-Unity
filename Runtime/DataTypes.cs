@@ -102,7 +102,7 @@ namespace OpenAI
         public int? MaxTokens { get; set; }
         public float? PresencePenalty { get; set; } = 0;
         public float? FrequencyPenalty { get; set; } = 0;
-        public Dictionary<string, string> LogitBias { get; set; }
+        public Dictionary<string, float> LogitBias { get; set; }
         public string User { get; set; }
         public string SystemFingerprint { get; set; }
         
@@ -110,6 +110,7 @@ namespace OpenAI
         public ToolChoice? ToolChoice { get; set; }
     }
 
+    [Serializable]
     public class CreateChatCompletionResponse : IResponse
     {
         public ApiError Error { get; set; }
@@ -136,6 +137,7 @@ namespace OpenAI
         public string Function { get; set; } 
     }
     
+    [Serializable]
     [JsonConverter(typeof(PropertyJsonConverter))]
     public record FunctionProperties
     {
@@ -152,6 +154,7 @@ namespace OpenAI
         public string Description { get; set; }
     }
 
+    [Serializable]
     [JsonConverter(typeof(ChatFunctionJsonConverter))]
     public record ChatFunction
         { 
@@ -177,6 +180,7 @@ namespace OpenAI
             public Delegate? Callback { get; set; }
         }
     
+    [Serializable]
     public struct ChatChoice
     {
         public ChatMessage Message { get; set; }
@@ -186,14 +190,35 @@ namespace OpenAI
         public string Logprobs { get; set; }
     }
 
-    public struct ChatMessage
+    [Serializable]
+    public class ChatMessage
     {
+        public ChatMessage()
+        {
+        }
+        
+        public ChatMessage(string message, string role)
+        {
+            Content = message;
+            Role = role;
+        }
+
+        public ChatMessage(FunctionResult functionResult)
+        {
+            ToolCallId = functionResult.ToolCallId;
+            Name = functionResult.Name;
+            Content = functionResult.Value;
+            Role = "tool";
+        }
         public string Role { get; set; }
         public string Content { get; set; }
         
-        public List<FunctionCall> FunctionCalls { get; set; }
+        public List<FunctionCall> ToolCalls { get; set; }
         
-        public FunctionResult FunctionResult { get; set; }
+        public string? ToolCallId { get; set; }
+
+        public string Name { get; set; } = null!;
+        
     }
     
     [Serializable]
@@ -209,7 +234,6 @@ namespace OpenAI
         public string Arguments { get; set; } = null!;
     }
     
-    [JsonConverter(typeof(FunctionResultJsonConverter))]
     public record FunctionResult
     {
         public FunctionResult() { }

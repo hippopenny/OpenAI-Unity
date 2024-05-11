@@ -30,7 +30,7 @@ namespace OpenAI
                     Argument.Add(cancellationToken);
                     continue;
                 }
-                if (_arguments.ContainsValue(parameter.Name))
+                if (_arguments.ContainsKey(parameter.Name))
                 {
                     try
                     {
@@ -45,6 +45,7 @@ namespace OpenAI
                                 $"Value '{_arguments[parameter.Name]}' is not valid for parameter '{parameter.Name}'. Expected type: '{parameter.ParameterType.Name}'."
                         });
                         onError.Invoke(e);
+                        return JsonConvert.SerializeObject(new { IsSuccess = true });
                     }
                 }
                 else if(function.Parameters[parameter.Name].IsOptinal && parameter.DefaultValue != DBNull.Value)
@@ -54,7 +55,8 @@ namespace OpenAI
                 else
                 {
                     if(onError == null) return JsonConvert.SerializeObject(new { Error = $"You must provide a value for the required parameter '{parameter.Name}'." });
-                    onError.Invoke(new Exception());
+                    onError.Invoke(new Exception($"You must provide a value for the required parameter '{parameter.Name}'."));
+                    return JsonConvert.SerializeObject(new { IsSuccess = true });
                 }
             }
 
@@ -66,6 +68,8 @@ namespace OpenAI
             catch (Exception e)
             {
                 onError.Invoke(e);
+                return JsonConvert.SerializeObject(new { IsSuccess = true });
+
             }
             
             if (invocationResult is Task task)

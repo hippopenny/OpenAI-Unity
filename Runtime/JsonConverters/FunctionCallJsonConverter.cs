@@ -7,10 +7,22 @@ namespace JsonConverters
 {
     public class FunctionCallJsonConverter: JsonConverter
     {
-        
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            if (value is FunctionCall functionCall)
+            {
+                JObject o = new JObject
+                {
+                    {"id", functionCall.ToolCallId},
+                    {"type","function"},
+                    {"function",JToken.FromObject(new JObject
+                    {
+                        {"name", functionCall.Name},
+                        {"arguments", functionCall.Arguments}
+                    }) }
+                };
+                o.WriteTo(writer);
+            }
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)

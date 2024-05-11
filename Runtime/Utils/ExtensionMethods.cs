@@ -53,7 +53,7 @@ namespace OpenAI
             {
                 request.SetRequestHeader("Content-Type", type);
             }
-            request.SetRequestHeader("Authorization", "Bearer " + configuration.Auth.ApiKey);
+            request.SetRequestHeader("Authorization", "Bearer nk-" + configuration.Auth.ApiKey);
         }
     }
 }

@@ -11,7 +11,6 @@ namespace JsonConverters
         {
             if (value is ToolChoice toolChoice)
             {
-                
                 if (toolChoice.Equals(ToolChoice.None))
                 {
                     var jValue =new JValue("none");
@@ -27,8 +26,10 @@ namespace JsonConverters
                 } else 
                 {
                     var jObject = new JObject();
+                    var jfuncObej = new JObject();
+                    jfuncObej.Add("name",toolChoice.Function);
                     jObject.Add("type", toolChoice.Type);
-                    jObject.Add("function", $@"{{""name"":{toolChoice.Function}}}");
+                    jObject.Add("function", jfuncObej);
                     jObject.WriteTo(writer);
                 }
             }        
