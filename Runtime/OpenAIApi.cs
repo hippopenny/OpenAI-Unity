@@ -148,41 +148,6 @@ namespace OpenAI
         }
 
         /// <summary>
-        ///     Dispatches an HTTP request to the specified path with a multi-part data form.
-        /// </summary>
-        /// <param name="path">The path to send the request to.</param>
-        /// <param name="form">A multi-part data form to upload with the request.</param>
-        /// <typeparam name="T">Response type of the request.</typeparam>
-        /// <returns>A Task containing the response from the request as the specified type.</returns>
-        private async Task<T> DispatchRequest<T>(string path, List<IMultipartFormSection> form) where T: IResponse
-        {
-            T data;
-            
-            using (var request = new UnityWebRequest(path, "POST"))
-            {
-                request.SetHeaders(Configuration);
-                var boundary = UnityWebRequest.GenerateBoundary();
-                var formSections = UnityWebRequest.SerializeFormSections(form, boundary);
-                var contentType = $"{ContentType.MultipartFormData}; boundary={Encoding.UTF8.GetString(boundary)}";
-                request.uploadHandler = new UploadHandlerRaw(formSections) {contentType = contentType};
-                request.downloadHandler = new DownloadHandlerBuffer();
-                var asyncOperation = request.SendWebRequest();
-
-                while (!asyncOperation.isDone) await Task.Yield();
-                
-                data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
-            }
-            
-            if (data != null && data.Error != null)
-            {
-                ApiError error = data.Error;
-                Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
-            }
-
-            return data;
-        }
-
-        /// <summary>
         ///     Create byte array payload from the given request object that contains the parameters.
         /// </summary>
         /// <param name="request">The request object that contains the parameters of the payload.</param>

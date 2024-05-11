@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace JsonConverters
 {
-    public class FunctionResultJsonConverter: JsonConverter
+    public class FunctionCallJsonConverter: JsonConverter
     {
         
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -16,12 +16,20 @@ namespace JsonConverters
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            
+            JObject jObject = JObject.Load(reader);
+            string name = jObject["function"]?["name"] == null ? string.Empty : jObject["function"]?["name"].ToString();
+            FunctionCall result = new FunctionCall
+            {
+                ToolCallId = jObject["id"]?.ToString(),
+                Name = name,
+                Arguments = jObject["function"]?["arguments"]?.ToString() ?? string.Empty
+            };
+            return result;
         }
 
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(FunctionResult);
+            return objectType == typeof(FunctionCall);
         }
     }
     

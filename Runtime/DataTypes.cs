@@ -197,7 +197,7 @@ namespace OpenAI
     }
     
     [Serializable]
-    [JsonConverter(typeof(FunctionResultJsonConverter))]
+    [JsonConverter(typeof(FunctionCallJsonConverter))]
     public record FunctionCall
     {
         public FunctionCall() { }
