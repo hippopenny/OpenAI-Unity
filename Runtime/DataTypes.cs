@@ -127,11 +127,20 @@ namespace OpenAI
     [JsonConverter(typeof(ToolChoiceJsonConverter))]
     public class ToolChoice
     {
-        public static ToolChoice None;
+        public static ToolChoice None = new ToolChoice()
+        {
+            Function = "None"
+        };
 
-        public static ToolChoice Auto;
+        public static ToolChoice Auto = new ToolChoice()
+        {
+            Function = "Auto"
+        };
 
-        public static ToolChoice Required;
+        public static ToolChoice Required = new ToolChoice()
+        {
+            Function = "Required"
+        };
         
         public string Type { get; set; }
         public string Function { get; set; } 
