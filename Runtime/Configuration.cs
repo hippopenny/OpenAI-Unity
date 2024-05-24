@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using HippoFramework.Auth;
 using UnityEngine;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -24,18 +25,17 @@ namespace OpenAI
         {
             if (apiKey == null)
             {
-                var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var authPath = $"{userPath}/.openai/auth.json";
-
-                if (File.Exists(authPath))
+                var json = Resources.Load<TextAsset>("auth").text;
+                if (json != null)
                 {
-                    var json = File.ReadAllText(authPath);
-                    Auth = JsonConvert.DeserializeObject<Auth>(json, jsonSerializerSettings);
-                }
-                else
-                {
-                    Debug.LogError("API Key is null and auth.json does not exist. Please check https://github.com/srcnalt/OpenAI-Unity#saving-your-credentials");
-                }
+                    
+                        Auth = JsonConvert.DeserializeObject<Auth>json,jsonSerializerSettings);
+                    }
+                    else
+                    {
+                        Debug.LogError("Access Token is null");
+                    }
+                
             }
             else
             {

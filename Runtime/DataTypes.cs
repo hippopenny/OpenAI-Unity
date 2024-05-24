@@ -47,6 +47,7 @@ namespace OpenAI
         public string Warning { get; set; }
     }
 
+    [JsonConverter(typeof(ApiErrorJsonConverter))]
     public class ApiError
     {
         public string Message;
@@ -60,33 +61,6 @@ namespace OpenAI
         [JsonRequired]
         public string ApiKey { get; set; }
         public string Organization { get; set; }
-    }
-    #endregion
-    
-    #region Models API Data Types
-    public struct ListModelsResponse: IResponse
-    {
-        public ApiError Error { get; set; }
-        public string Warning { get; set; }
-        public string Object { get; set; }
-        public List<OpenAIModel> Data { get; set; }
-    }
-
-    public class OpenAIModel
-    {
-        public string Id { get; set; }
-        public string Object { get; set; }
-        public string OwnedBy { get; set; }
-        public long Created { get; set; }
-        public string Root { get; set; }
-        public string Parent { get; set; }
-        public List<Dictionary<string, object>> Permission { get; set; }
-    }
-
-    public class OpenAIModelResponse : OpenAIModel, IResponse
-    {
-        public ApiError Error { get; set; }
-        public string Warning { get; set; }
     }
     #endregion
 
@@ -129,17 +103,17 @@ namespace OpenAI
     {
         public static ToolChoice None = new ToolChoice()
         {
-            Function = "None"
+            Function = "none"
         };
 
         public static ToolChoice Auto = new ToolChoice()
         {
-            Function = "Auto"
+            Function = "auto"
         };
 
         public static ToolChoice Required = new ToolChoice()
         {
-            Function = "Required"
+            Function = "required"
         };
         
         public string Type { get; set; }

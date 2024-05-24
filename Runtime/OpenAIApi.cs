@@ -65,9 +65,9 @@ namespace OpenAI
         /// <param name="payload">An optional byte array of json payload to include in the request.</param>
         /// <typeparam name="T">Response type of the request.</typeparam>
         /// <returns>A Task containing the response from the request as the specified type.</returns>
-        private async void DispatchRequest<T>(string path, string method, Action<T> onComplete, byte[] payload = null) where T: IResponse
+        private async void DispatchRequest<T>(string path, string method, Action<T> onComplete,Action<ApiError> onError, byte[] payload = null) where T: IResponse, new()
         {
-            T data;
+            T data = new T();
             
             using (var request = UnityWebRequest.Put(path, payload))
             {
@@ -77,15 +77,18 @@ namespace OpenAI
                 var asyncOperation = request.SendWebRequest();
 
                 while (!asyncOperation.isDone) await Task.Yield() ;
-                
-                Debug.LogWarning(request.downloadHandler.text);
-                
-                data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
+                Debug.Log(request.downloadHandler.text);
+                if (request.downloadHandler.text.Contains("error"))
+                {
+                    data.Error = JsonConvert.DeserializeObject<ApiError>(request.downloadHandler.text, jsonSerializerSettings);
+                } else data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
                 
                 if (data?.Error != null)
                 {
                     ApiError error = data.Error;
-                    Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
+                    onError.Invoke(error);
+                    return;
+                    //Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
                 }
 
                 if (data?.Warning != null)
@@ -105,7 +108,7 @@ namespace OpenAI
         /// <param name="onComplete">A callback function to be called when the request is complete.</param>
         /// <param name="token">A cancellation token to cancel the request.</param>
         /// <param name="payload">An optional byte array of json payload to include in the request.</param>
-        private async void DispatchRequest<T>(string path, string method, Action<List<T>> onResponse, Action onComplete, CancellationTokenSource token, byte[] payload = null) where T: IResponse, new()
+        private async void DispatchRequest<T>(string path, string method, Action<List<T>> onResponse, Action onComplete,Action<ApiError> onError, CancellationTokenSource token, byte[] payload = null) where T: IResponse, new()
         {
             using (var request = UnityWebRequest.Put(path, payload))
             {
@@ -125,20 +128,17 @@ namespace OpenAI
                             isDone = true;
                             break;
                         }
-                        Debug.Log(value);
                         var data = new T();
-                        try
+                        if (request.downloadHandler.text.Contains("error"))
                         {
-                            data = JsonConvert.DeserializeObject<T>(value, jsonSerializerSettings);
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.Log(value);
-                        }
+                            data.Error = JsonConvert.DeserializeObject<ApiError>(request.downloadHandler.text, jsonSerializerSettings);
+                        } else data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
+                        
                         if (data?.Error != null)
                         {
                             ApiError error = data.Error;
-                            Debug.LogError($"Error Message: {error.Message}\nError Type: {error.Type}\n");
+                            onError.Invoke(error);
+                            return;
                         }
                         else
                         {
@@ -173,13 +173,15 @@ namespace OpenAI
         ///     Creates a chat completion request as in ChatGPT.
         /// </summary>
         /// <param name="request">See <see cref="CreateChatCompletionRequest"/></param>
+        /// <param name="onComplete">Callback function that will be called when response is completed</param>
+        /// <param name="onError">Callback function that will be called when receive error from API</param>
         /// <returns>See <see cref="CreateChatCompletionResponse"/></returns>
-        public void CreateChatCompletion(CreateChatCompletionRequest request, Action<CreateChatCompletionResponse> onComplete)
+        public void CreateChatCompletion(CreateChatCompletionRequest request, Action<CreateChatCompletionResponse> onComplete, Action<ApiError> onError)
         {
             var path = $"{BASE_PATH}/chat/completions";
             var payload = CreatePayload(request);
             
-            DispatchRequest(path, UnityWebRequest.kHttpVerbPOST,onComplete, payload);
+            DispatchRequest(path, UnityWebRequest.kHttpVerbPOST,onComplete,onError, payload);
         }
         
         /// <summary>
@@ -189,13 +191,13 @@ namespace OpenAI
         /// <param name="onResponse">Callback function that will be called when stream response is updated.</param>
         /// <param name="onComplete">Callback function that will be called when stream response is completed.</param>
         /// <param name="token">Cancellation token to cancel the request.</param>
-        public void CreateChatCompletionAsync(CreateChatCompletionRequest request, Action<List<CreateChatCompletionResponse>> onResponse, Action onComplete, CancellationTokenSource token)
+        public void CreateChatCompletionAsync(CreateChatCompletionRequest request, Action<List<CreateChatCompletionResponse>> onResponse, Action onComplete,Action<ApiError> onError, CancellationTokenSource token)
         {
             request.Stream = true;
             var path = $"{BASE_PATH}/chat/completions";
             var payload = CreatePayload(request);
             
-            DispatchRequest(path, UnityWebRequest.kHttpVerbPOST, onResponse, onComplete, token, payload);
+            DispatchRequest(path, UnityWebRequest.kHttpVerbPOST, onResponse, onComplete,onError, token, payload);
         }
     }
 }

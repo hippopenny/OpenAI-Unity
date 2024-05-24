@@ -32,7 +32,6 @@ namespace JsonConverters
             return objectType == typeof(FunctionProperties);
         }
 
-        //TODO - Refactor add description to parameter
         private JObject SerializeType(Type propertyTyper, string description)
         {
             JObject result = new JObject();

@@ -29,6 +29,13 @@ namespace OpenAI.MemoryBank
             else if(!_memoryBank[index].Contains(thought)) _memoryBank[index].Add(thought);
         }
 
+        public void RemoveFromMemoryBank(string index, int index1)
+        {
+            if (!_memoryBank.ContainsKey(index)) throw new Exception($"Key {index} not contained in bank");
+            if(_memoryBank[index].Count <= index1) throw new Exception($"Key {index} does not have {index1} memory");
+            _memoryBank[index].RemoveAt(index1);
+        }
+        
         public bool TryRetrieveFromMemoryBank(string index,out List<string> output)
         {
             return _memoryBank.TryGetValue(index, out output);
