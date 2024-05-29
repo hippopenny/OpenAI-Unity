@@ -77,11 +77,12 @@ namespace OpenAI
                 var asyncOperation = request.SendWebRequest();
 
                 while (!asyncOperation.isDone) await Task.Yield() ;
-                Debug.Log(request.downloadHandler.text);
-                if (request.downloadHandler.text.Contains("error"))
+                var replace = request.downloadHandler.text.Replace("data: ", "");
+                Debug.Log(replace);
+                if (replace.Contains("error"))
                 {
-                    data.Error = JsonConvert.DeserializeObject<ApiError>(request.downloadHandler.text, jsonSerializerSettings);
-                } else data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, jsonSerializerSettings);
+                    data.Error = JsonConvert.DeserializeObject<ApiError>(replace, jsonSerializerSettings);
+                } else data = JsonConvert.DeserializeObject<T>(replace, jsonSerializerSettings);
                 
                 if (data?.Error != null)
                 {
@@ -178,6 +179,7 @@ namespace OpenAI
         /// <returns>See <see cref="CreateChatCompletionResponse"/></returns>
         public void CreateChatCompletion(CreateChatCompletionRequest request, Action<CreateChatCompletionResponse> onComplete, Action<ApiError> onError)
         {
+            request.Stream = false;
             var path = $"{BASE_PATH}/chat/completions";
             var payload = CreatePayload(request);
             

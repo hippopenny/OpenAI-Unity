@@ -29,7 +29,7 @@ namespace OpenAI
                 if (json != null)
                 {
                     
-                        Auth = JsonConvert.DeserializeObject<Auth>json,jsonSerializerSettings);
+                        Auth = JsonConvert.DeserializeObject<Auth>(json,jsonSerializerSettings);
                     }
                     else
                     {
